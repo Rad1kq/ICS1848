@@ -1,0 +1,45 @@
+from html.parser import HTMLParser
+from urllib.request import Request, urlopen
+from urllib.parse import urljoin, urlparse, unquote
+
+
+class ImageParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.image_links = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() == "img":
+            attributes = dict(attrs)
+            source = attributes.get("src")
+
+            if source:
+                self.image_links.append(source.strip())
+
+
+url = input("Введи адрес веб-страницы: ")
+
+request = Request(url, headers={"User-Agent": "Mozilla/5.0"})
+
+with urlopen(request) as response:
+    charset = response.headers.get_content_charset() or "utf-8"
+    html = response.read().decode(charset, errors="replace")
+
+parser = ImageParser()
+parser.feed(html)
+
+image_names = []
+
+for link in parser.image_links:
+    full_link = urljoin(url, link)
+    path = urlparse(full_link).path
+    name = unquote(path.rsplit("/", 1)[-1])
+
+    if name:
+        image_names.append(name)
+
+with open("image.txt", "w", encoding="utf-8") as file:
+    for name in image_names:
+        file.write(name + "\n")
+
+print("Имена файлов записаны в image.txt")
