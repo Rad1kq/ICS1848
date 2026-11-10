@@ -1,1 +1,49 @@
+from html.parser import HTMLParser
+from urllib.request import Request, urlopen
+import json
 
+
+UKRAINIAN_LETTERS = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя"
+
+
+class PageTextParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.text_parts = []
+        self.skip_text = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ("script", "style", "noscript"):
+            self.skip_text = True
+
+    def handle_endtag(self, tag):
+        if tag in ("script", "style", "noscript"):
+            self.skip_text = False
+
+    def handle_data(self, data):
+        if not self.skip_text:
+            self.text_parts.append(data)
+
+
+url = input("Введи адрес веб-страницы: ")
+
+request = Request(url, headers={"User-Agent": "Mozilla/5.0"})
+
+with urlopen(request) as response:
+    charset = response.headers.get_content_charset() or "utf-8"
+    html = response.read().decode(charset, errors="replace")
+
+parser = PageTextParser()
+parser.feed(html)
+
+page_text = "".join(parser.text_parts).lower()
+frequencies = {letter: 0 for letter in UKRAINIAN_LETTERS}
+
+for character in page_text:
+    if character in frequencies:
+        frequencies[character] += 1
+
+with open("frequency.json", "w", encoding="utf-8") as file:
+    json.dump(frequencies, file, ensure_ascii=False, indent=2)
+
+print("Результат записано у файл frequency.json")
