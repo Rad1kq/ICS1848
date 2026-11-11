@@ -1,0 +1,63 @@
+from tkinter import *
+
+root = Tk()
+root.title("Середня зарплата працівників")
+root.geometry("600x450")
+root.config(bg="brown")
+
+canvas = Canvas(root, width=500, height=340, bg="brown")
+canvas.pack()
+
+names = []
+averages = []
+
+with open("salaries.txt", encoding="utf-8") as file:
+    for line in file:
+        data = line.split()
+
+        names.append(data[0])
+
+        average = (
+            float(data[1]) +
+            float(data[2]) +
+            float(data[3])
+        ) / 3
+
+        averages.append(average)
+
+max_salary = max(averages)
+
+canvas.create_text(
+    250, 15,
+    text="Середня зарплата, грн",
+    fill="white",
+    font=("Arial", 12, "bold")
+)
+
+row_height = 270 / len(names)
+
+for i in range(len(names)):
+    y = 35 + i * row_height
+    bar_width = averages[i] / max_salary * 250
+
+    canvas.create_text(
+        120, y + 10,
+        text=names[i],
+        fill="white",
+        anchor="e"
+    )
+
+    canvas.create_rectangle(
+        130, y,
+        130 + bar_width, y + 20,
+        fill="orange"
+    )
+
+    canvas.create_text(
+        135 + bar_width, y + 10,
+        text=round(averages[i], 2),
+        fill="white",
+        anchor="w"
+    )
+
+root.mainloop()
