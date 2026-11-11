@@ -1,0 +1,52 @@
+import tkinter as tk
+from tkinter import messagebox
+from html.parser import HTMLParser
+from urllib.request import Request, urlopen
+
+
+class PageParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.parts = []
+
+    def handle_data(self, data):
+        self.parts.append(data)
+
+
+def read_page():
+    url = entry.get().strip()
+
+    try:
+        request = Request(url, headers={"User-Agent": "Mozilla/5.0"})
+
+        with urlopen(request) as page:
+            encoding = page.headers.get_content_charset() or "utf-8"
+            html = page.read().decode(encoding, errors="replace")
+
+        parser = PageParser()
+        parser.feed(html)
+
+        text_box.delete("1.0", tk.END)
+        text_box.insert(tk.END, " ".join(parser.parts))
+
+    except Exception as error:
+        messagebox.showerror("Помилка", str(error))
+
+
+window = tk.Tk()
+window.title("Текст веб-сторінки")
+window.geometry("750x600")
+
+label = tk.Label(window, text="Введіть адресу веб-сторінки:")
+label.pack()
+
+entry = tk.Entry(window, width=70)
+entry.pack()
+
+button = tk.Button(window, text="Зчитати текст", command=read_page)
+button.pack()
+
+text_box = tk.Text(window, wrap="word")
+text_box.pack(fill="both", expand=True)
+
+window.mainloop()
