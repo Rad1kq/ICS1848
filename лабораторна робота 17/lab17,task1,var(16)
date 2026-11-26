@@ -1,1 +1,30 @@
+from pathlib import Path
 
+import pandas as pd
+
+
+def main():
+    folder = Path(__file__).resolve().parent
+    points_file = folder / "points.csv"
+    distance_file = folder / "distance.csv"
+
+    points = pd.read_csv(points_file)
+    if points.shape[1] != 4:
+        raise ValueError("points.csv must contain a name column and x, y, z coordinates.")
+
+    coordinates = points.iloc[:, 1:4].apply(pd.to_numeric, errors="raise")
+    distances = (coordinates.pow(2).sum(axis=1)) ** 0.5
+
+    result = pd.DataFrame(
+        {
+            points.columns[0]: points.iloc[:, 0],
+            "distance": distances,
+        }
+    )
+    result.to_csv(distance_file, index=False)
+    print(result)
+    print(f"\nDistances were saved to: {distance_file}")
+
+
+if __name__ == "__main__":
+    main()
