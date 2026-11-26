@@ -1,0 +1,36 @@
+import random
+from pathlib import Path
+
+import pandas as pd
+
+
+def main():
+    folder = Path(__file__).resolve().parent
+    input_file = folder / "temp.txt"
+    output_file = folder / "fin.txt"
+
+    if not input_file.is_file():
+        raise FileNotFoundError(f"Place temp.txt next to this program: {input_file}")
+
+    text = input_file.read_text(encoding="utf-8")
+    for separator in (",", ";"):
+        text = text.replace(separator, " ")
+
+    numbers = [int(value) for value in text.split()]
+    values = pd.Series(numbers, dtype="int64")
+    unique_values = values.drop_duplicates().reset_index(drop=True)
+
+    random_values = pd.Series(
+        [random.randint(0, 25) for _ in range(6)],
+        dtype="int64",
+    )
+    result = pd.concat([unique_values, random_values], ignore_index=True)
+    result.to_csv(output_file, index=False, header=False)
+
+    print("Resulting array:")
+    print(result.to_list())
+    print(f"Saved to: {output_file}")
+
+
+if __name__ == "__main__":
+    main()
