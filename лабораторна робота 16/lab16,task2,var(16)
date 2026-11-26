@@ -1,0 +1,76 @@
+from html.parser import HTMLParser
+from urllib.error import URLError
+from urllib.request import Request, urlopen
+
+
+class HyperlinkCounter(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.count = 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() == "a" and any(
+            name.lower() == "href" and value is not None for name, value in attrs
+        ):
+            self.count += 1
+
+
+SITES = [
+    ("Python", "https://www.python.org"),
+    ("Wikipedia", "https://www.wikipedia.org"),
+    ("Mozilla", "https://www.mozilla.org"),
+    ("GitHub", "https://github.com"),
+    ("Stack Overflow", "https://stackoverflow.com"),
+    ("NASA", "https://www.nasa.gov"),
+    ("W3C", "https://www.w3.org"),
+    ("DuckDuckGo", "https://duckduckgo.com"),
+]
+
+
+def count_hyperlinks(url):
+    request = Request(
+        url,
+        headers={"User-Agent": "Mozilla/5.0 (compatible; HyperlinkCounter/1.0)"},
+    )
+    with urlopen(request, timeout=15) as response:
+        page = response.read().decode(
+            response.headers.get_content_charset() or "utf-8",
+            errors="replace",
+        )
+
+    parser = HyperlinkCounter()
+    parser.feed(page)
+    return parser.count
+
+
+def main():
+    results = {}
+
+    for name, url in SITES:
+        try:
+            results[name] = count_hyperlinks(url)
+            print(f"{name}: counted")
+        except (URLError, TimeoutError, OSError) as error:
+            print(f"{name}: could not be read ({error})")
+
+    if not results:
+        print("No sites could be read, so the histogram cannot be displayed.")
+        return
+
+    max_count = max(results.values())
+    bar_width = 50
+
+    print("\nNumber of hyperlinks on each site:")
+    for name, count in results.items():
+        if max_count == 0:
+            bar_length = 0
+        else:
+            bar_length = round(count / max_count * bar_width)
+            if count > 0:
+                bar_length = max(1, bar_length)
+
+        print(f"{name:15} | {'#' * bar_length} {count}")
+
+
+if __name__ == "__main__":
+    main()
