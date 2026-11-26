@@ -1,0 +1,14 @@
+import numpy as np # type: ignore
+import matplotlib.pyplot as plt # type: ignore
+
+
+x = np.linspace(-8, 8, 1000)
+y = (1 / np.pi) * np.sin(0.3 * x)
+
+plt.plot(x, y, linestyle=':', color='black')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title(r'$y = \frac{1}{\pi}\sin(0{,}3x)$')
+plt.grid(True)
+plt.savefig('function.jpg', dpi=300)
+plt.show()
